@@ -1,0 +1,96 @@
+service: cats-api-${env:ENVIRONMENT}
+frameworkVersion: "4"
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${env:AWS_ACCOUNT_REGION}
+  stage: v1
+  stackName: ${self:service}-${self:provider.stage}
+  deploymentBucket: ${env:AWS_DEPLOYMENT_BUCKET}
+
+  iam:
+    role:
+      managedPolicies:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        - "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+        - "arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy"
+      statements:
+        - Effect: Allow
+          Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+            - ses:SendTemplatedEmail
+          Resource:
+            - arn:aws:ses:${env:AWS_ACCOUNT_REGION}:${env:AWS_ACCOUNT_ID}:identity/${env:EMAIL_NO_REPLY}
+
+  tracing:
+    lambda: true
+  logRetentionInDays: 30
+
+  tags:
+    Client: "Cats API"
+    Product: "Cats API"
+    Service: "API"
+    Environment: ${env:ENVIRONMENT}
+
+  environment:
+    NODE_ENV: ${env:NODE_ENV}
+    ENVIRONMENT: ${env:ENVIRONMENT}
+    MONGODB_URL: ${env:MONGODB_URL}
+    EMAIL_NO_REPLY: ${env:EMAIL_NO_REPLY}
+    AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
+    AWS_ACCOUNT_REGION: ${env:AWS_ACCOUNT_REGION}
+    ELASTICSEARCH_URL: ${env:ELASTICSEARCH_URL}
+    JWT_SECRET: ${env:JWT_SECRET}
+
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    host: 0.0.0.0   # Listen on all IPs
+    httpPort: "${env:PORT, '3001'}"
+    lambdaPort: 4001
+  prune:
+    automatic: true
+    number: 3
+  serverlessIfElse:
+    - If: '"${env:NODE_ENV}" == "production"'
+      Exclude:
+        - functions.api.events.0.httpApi
+
+functions:
+  api:
+    name: ${self:service}_${self:provider.stage}
+    handler: dist/main.handler
+    description: API
+    timeout: 900
+    memorySize: 1024
+    url: true
+    vpc:
+      securityGroupIds:
+        - ${env:AWS_VPC_SECURITY_GROUP_LAMBDA}
+      subnetIds:
+        - ${env:AWS_VPC_SUBNET_NAT_1}
+        - ${env:AWS_VPC_SUBNET_NAT_2}
+        - ${env:AWS_VPC_SUBNET_NAT_3}
+    events:
+      - httpApi: "*"
+    # Inject serverless functions api settings
+
+package:
+  patterns:
+    - bin/**
+    - src/**
+    - package-lock.json
+    - package.json
+    - ".npmrc"
+    - "!.devops/**"
+    - "!.eslintrc.js"
+    - "!azure-pipeline.yaml"
+    - "!tests/**"
+    - "!.git/**"
+  excludeDevDependencies: true

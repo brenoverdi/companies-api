@@ -1,0 +1,165 @@
+{
+  "C:\\Users\\breno\\Documents\\obitec\\nest-test\\test-project": {
+    "versionSfCore": null,
+    "versionFramework": "4.4.18",
+    "isWithinCompose": false,
+    "isCompose": false,
+    "composeOrgName": null,
+    "composeServiceName": null,
+    "servicePath": "C:\\Users\\breno\\Documents\\obitec\\nest-test\\test-project",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "cats-api-development",
+      "frameworkVersion": "3",
+      "useDotenv": true,
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs18.x",
+        "region": "us-east-1",
+        "stage": "v1",
+        "stackName": "cats-api-development-v1",
+        "deploymentBucket": "local",
+        "iam": {
+          "role": {
+            "managedPolicies": [
+              "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess",
+              "arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy"
+            ],
+            "statements": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "ses:SendEmail",
+                  "ses:SendRawEmail",
+                  "ses:SendTemplatedEmail"
+                ],
+                "Resource": [
+                  "arn:aws:ses:us-east-1:266735816521:identity/noreply@catsapi.com"
+                ]
+              }
+            ]
+          }
+        },
+        "tracing": {
+          "lambda": true
+        },
+        "logRetentionInDays": 30,
+        "tags": {
+          "Client": "Cats API",
+          "Product": "Cats API",
+          "Service": "API",
+          "Environment": "development"
+        },
+        "environment": {
+          "NODE_ENV": "development",
+          "ENVIRONMENT": "development",
+          "MONGODB_URL": "mongodb+srv://brenoverdi:tEk2XrNQWOHtxlIk@cluster0.on9ov.mongodb.net",
+          "EMAIL_NO_REPLY": "noreply@catsapi.com",
+          "AWS_ACCOUNT_ID": "266735816521",
+          "AWS_ACCOUNT_REGION": "us-east-1"
+        }
+      },
+      "plugins": [
+        "serverless-plugin-typescript",
+        "serverless-offline",
+        "serverless-prune-plugin",
+        "serverless-plugin-ifelse"
+      ],
+      "custom": {
+        "serverless-offline": {
+          "httpPort": "3001",
+          "lambdaPort": 4001
+        },
+        "prune": {
+          "automatic": true,
+          "number": 3
+        },
+        "serverlessIfElse": [
+          {
+            "If": "\"development\" == \"production\"",
+            "Exclude": [
+              "functions.api.events.0.httpApi"
+            ]
+          }
+        ]
+      },
+      "functions": {
+        "api": {
+          "name": "cats-api-development_v1",
+          "handler": "src/handler.run",
+          "description": "API",
+          "timeout": 900,
+          "memorySize": 1024,
+          "url": true,
+          "vpc": {
+            "securityGroupIds": [
+              "${env:AWS_VPC_SECURITY_GROUP_LAMBDA}"
+            ],
+            "subnetIds": [
+              "${env:AWS_VPC_SUBNET_NAT_1}",
+              "${env:AWS_VPC_SUBNET_NAT_2}",
+              "${env:AWS_VPC_SUBNET_NAT_3}"
+            ]
+          },
+          "events": [
+            {
+              "httpApi": "*"
+            }
+          ]
+        }
+      },
+      "package": {
+        "patterns": [
+          "bin/**",
+          "src/**",
+          "package-lock.json",
+          "package.json",
+          ".npmrc",
+          "!.devops/**",
+          "!.eslintrc.js",
+          "!azure-pipeline.yaml",
+          "!tests/**",
+          "!.git/**"
+        ],
+        "excludeDevDependencies": true
+      }
+    },
+    "serviceRawFile": "service: cats-api-${env:ENVIRONMENT}\r\nframeworkVersion: \"3\"\r\nuseDotenv: true\r\n\r\nprovider:\r\n  name: aws\r\n  runtime: nodejs18.x\r\n  region: ${env:AWS_ACCOUNT_REGION}\r\n  stage: v1\r\n  stackName: ${self:service}-${self:provider.stage}\r\n  deploymentBucket: ${env:AWS_DEPLOYMENT_BUCKET}\r\n\r\n  iam:\r\n    role:\r\n      managedPolicies:\r\n        - \"arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole\"\r\n        - \"arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess\"\r\n        - \"arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy\"\r\n      statements:\r\n        - Effect: Allow\r\n          Action:\r\n            - ses:SendEmail\r\n            - ses:SendRawEmail\r\n            - ses:SendTemplatedEmail\r\n          Resource:\r\n            - arn:aws:ses:${env:AWS_ACCOUNT_REGION}:${env:AWS_ACCOUNT_ID}:identity/${env:EMAIL_NO_REPLY}\r\n\r\n  tracing:\r\n    lambda: true\r\n  logRetentionInDays: 30\r\n\r\n  tags:\r\n    Client: \"Cats API\"\r\n    Product: \"Cats API\"\r\n    Service: \"API\"\r\n    Environment: ${env:ENVIRONMENT}\r\n\r\n  environment:\r\n    NODE_ENV: ${env:NODE_ENV}\r\n    ENVIRONMENT: ${env:ENVIRONMENT}\r\n    MONGODB_URL: ${env:MONGODB_URL}\r\n    EMAIL_NO_REPLY: ${env:EMAIL_NO_REPLY}\r\n    AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}\r\n    AWS_ACCOUNT_REGION: ${env:AWS_ACCOUNT_REGION}\r\n\r\n\r\nplugins:\r\n  - serverless-plugin-typescript\r\n  - serverless-offline\r\n  - serverless-prune-plugin\r\n  - serverless-plugin-ifelse\r\n\r\ncustom:\r\n  serverless-offline:\r\n    httpPort: \"${env:PORT, '3001'}\"\r\n    lambdaPort: 4001\r\n  prune:\r\n    automatic: true\r\n    number: 3\r\n  serverlessIfElse:\r\n    - If: '\"${env:NODE_ENV}\" == \"production\"'\r\n      Exclude:\r\n        - functions.api.events.0.httpApi\r\n\r\nfunctions:\r\n  api:\r\n    name: ${self:service}_${self:provider.stage}\r\n    handler: src/handler.run\r\n    description: API\r\n    timeout: 900\r\n    memorySize: 1024\r\n    url: true\r\n    vpc:\r\n      securityGroupIds:\r\n        - ${env:AWS_VPC_SECURITY_GROUP_LAMBDA}\r\n      subnetIds:\r\n        - ${env:AWS_VPC_SUBNET_NAT_1}\r\n        - ${env:AWS_VPC_SUBNET_NAT_2}\r\n        - ${env:AWS_VPC_SUBNET_NAT_3}\r\n    events:\r\n      - httpApi: \"*\"\r\n    # Inject serverless functions api settings\r\n\r\npackage:\r\n  patterns:\r\n    - bin/**\r\n    - src/**\r\n    - package-lock.json\r\n    - package.json\r\n    - \".npmrc\"\r\n    - \"!.devops/**\"\r\n    - \"!.eslintrc.js\"\r\n    - \"!azure-pipeline.yaml\"\r\n    - \"!tests/**\"\r\n    - \"!.git/**\"\r\n  excludeDevDependencies: true\r\n",
+    "command": [
+      "offline"
+    ],
+    "options": {
+      "reloadHandler": true
+    },
+    "error": {
+      "message": "Cannot resolve '${env:AWS_VPC_SECURITY_GROUP_LAMBDA}' variable at 'functions.api.vpc.securityGroupIds.0'. No value is available for this variable, and no default value was provided. Please check your variable definitions or provide a default value.",
+      "stack": "Error: Cannot resolve '${env:AWS_VPC_SECURITY_GROUP_LAMBDA}' variable at 'functions.api.vpc.securityGroupIds.0'. No value is available for this variable, and no default value was provided. Please check your variable definitions or provide a default value.\n    at _ResolverManager.resolve (file:///C:/Users/breno/.serverless/releases/4.4.18/package/dist/sf-core.js:693:57587)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async #handlePlaceholderNode (file:///C:/Users/breno/.serverless/releases/4.4.18/package/dist/sf-core.js:693:55959)\n    at async file:///C:/Users/breno/.serverless/releases/4.4.18/package/dist/sf-core.js:693:53887\n    at async processNodeAndHandleCompletion (file:///C:/Users/breno/.serverless/releases/4.4.18/package/dist/sf-core.js:693:44836)",
+      "code": "MISSING_VARIABLE_RESULT"
+    },
+    "machineId": "5bfb5157d0b750a624fdb1b0be4fcef4",
+    "stage": "v1",
+    "accessKeyV2": "<REDACTED>",
+    "accessKeyV1": "<REDACTED>",
+    "orgId": "cd1d0cf7-ad47-4ddc-81b0-67e2fff7e6e6",
+    "orgName": "brenoverdi",
+    "userId": "4bV3t3GRv9VX6gk0LW",
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "userName": "brenoverdi",
+    "subscription": null,
+    "userEmail": "breno.verdi@acad.pucrs.br",
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}

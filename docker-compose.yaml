@@ -1,0 +1,32 @@
+version: "3.8"
+services:
+  # Elasticsearch Service
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"  # Expose port 9200 for Elasticsearch
+    networks:
+      - app-network
+
+  # NestJS + Serverless Service
+  nestjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Path to your Dockerfile for NestJS app
+    ports:
+      - "3001:3001"  # Expose port 3000 for NestJS API
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200  # Use Docker service name for communication
+      - SERVERLESS_ACCESS_KEY=${SERVERLESS_ACCESS_KEY}
+    depends_on:
+      - elasticsearch  # Ensure elasticsearch is up before starting NestJS app
+    networks:
+      - app-network
+    command: bash -c "sls offline --reloadHandler"
+
+networks:
+  app-network:
+    driver: bridge

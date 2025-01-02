@@ -1,6 +1,6 @@
 ## Companies API
 
-### This is a project that uses NestJS with Fastify. It is fully made using TypeScript. 
+### This is a project that uses NestJS with Fastify and Serverless. It is fully made using TypeScript. 
 
 ### The design pattern look up to separate the controllers from its service layer and from its entities. Trying to mimic as close as possible to the SOLID principle of design pattern. 
 
